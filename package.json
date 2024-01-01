@@ -1,0 +1,22 @@
+{
+  "name": "textract",
+  "module": "main.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/yeast": "^0.1.3",
+    "bun-types": "latest"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "bun run main.ts"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@streamparser/json": "^0.0.19",
+    "meow": "^13.0.0",
+    "yeast": "^0.1.2",
+    "zx": "^7.2.3"
+  }
+}
