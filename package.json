@@ -1,14 +1,14 @@
 {
   "name": "textract",
-  "module": "main.ts",
+  "module": "cli.ts",
   "type": "module",
   "devDependencies": {
     "@types/yeast": "^0.1.3",
     "bun-types": "latest"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "bun run main.ts"
+    "build": "bun build ./cli.ts --compile --outfile dist/textract",
+    "dev": "bun run cli.ts"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

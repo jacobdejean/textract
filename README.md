@@ -1,15 +1,31 @@
-# monologue
 
-To install dependencies:
+# textract
 
+A zx script that uses ffmpeg and whisper.cpp to extract text from a video file. 
+
+
+## Manual Installation
+
+Before you can install this tool, you need to build whisper.cpp and use it's `download-ggml-model.sh` shell script to download a model.
+
+Clone whisper.cpp, and in the clone directory:
 ```bash
-bun install
+  # download whisper model
+  bash ./models/download-ggml-model.sh base.en
+
+  # build the main example 
+  make
 ```
 
-To run:
-
-```bash
-bun run index.ts
+Clone this repository, and in the clone directory:
+```
+bun i
 ```
 
-This project was created using `bun init` in bun v1.0.6. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+
+    
+## Usage/Examples
+
+```javascript
+```
+

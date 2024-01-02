@@ -4,8 +4,6 @@ import { JSONParser } from "@streamparser/json";
 import yeast from "yeast";
 import { $, cd, os } from "zx";
 import meow from "meow";
-import fs from "fs";
-
 const cli = meow(
   `
 	Usage
@@ -19,23 +17,25 @@ const cli = meow(
     $ textract ./recording.mp4 -o ./transcript.txt
 `,
   {
-    importMeta: import.meta,
+    // @ts-ignore bun compile gives url a compile:// prefix, and meow doesn't handle this error
+    importMeta: {
+      url: "file://none",
+    },
     flags: {
       output: {
         type: "string",
         shortFlag: "o",
       },
+      quiet: {
+        type: "boolean",
+        shortFlag: "q",
+      },
     },
   }
 );
-
 const jsonparser = new JSONParser();
 
-$.verbose = false;
-
-type Flags = typeof cli.flags;
-
-async function main(source: string, flags: Flags) {
+async function main(source: string, flags: typeof cli.flags) {
   console.time("textract");
 
   const sourceFile = Bun.file(source);
@@ -49,27 +49,29 @@ async function main(source: string, flags: Flags) {
   const tempFile = `${tempDir}/${yeast()}.wav`;
   const tempLog = `${tempFile}.log`;
 
-  await ensureTempDirExists(tempDir);
+  await $`
+    if [ ! -d "${tempDir}" ]; then
+      mkdir ${tempDir}
+    fi
+  `;
 
   console.log("Extracting audio");
 
   // Extract wave from video
-  await $`ffmpeg -hide_banner -loglevel error -i ${source} -vn -ar 16000 -ac 1 -c:a pcm_s16le ${tempFile}`.pipe(
-    fs.createWriteStream(tempLog)
-  );
+  await $`ffmpeg -hide_banner -loglevel error -i ${source} -vn -ar 16000 -ac 1 -c:a pcm_s16le ${tempFile}`;
 
   console.log("Transcribing audio");
 
+  const model = "ggml-base.en.bin"; // ggml-medium.en.bin
+
   // transcribe wave file
   cd("./lib/whisper.cpp/");
-  await $`./main -f ${tempFile} --output-json-full`.pipe(
-    fs.createWriteStream(tempLog)
-  );
+  await $`./main -m ./models/${model} -f ${tempFile} --output-json-full`;
 
   console.log("Parsing transcript");
 
   // process json transcript
-  const transcriptPath = `${"/Users/jacobdejean/Desktop/Op10iTq.wav"}.json`;
+  const transcriptPath = `${tempFile}.json`;
   const transcriptFile = Bun.file(transcriptPath);
   const transcriptStream = transcriptFile.stream();
   const transcriptReader = transcriptStream.getReader();
@@ -97,14 +99,6 @@ async function main(source: string, flags: Flags) {
   console.timeEnd("textract");
 }
 
-async function ensureTempDirExists(path: string) {
-  await $`
-    if [ ! -d "${path}" ]; then
-      mkdir ${path}
-    fi
-  `;
-}
-
 async function writeValues(
   parser: JSONParser,
   reader: ReadableStreamDefaultReader<any>,
@@ -122,4 +116,5 @@ async function writeValues(
   }
 }
 
+$.verbose = false;
 main(cli.input.at(0) ?? "empty", cli.flags);
